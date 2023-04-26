@@ -2,6 +2,9 @@
 
 ***Article about loopback and stepzen in relation with GraphQL***
 
+This article is under construction, there are many things to discuss further.
+So far, the topics explored are about the use of mongoDB with a loopback layer allowing to expose REST invocations to the mongodb database. Then use those REST APIs described in the Open API specification to generate a GraphQL API.
+
 Author: Arnauld Desprets (arnauld_desprets@fr.ibm.com)
 
 Date last modified: 25 th April 2023
@@ -13,7 +16,7 @@ Date created: 25 th October 2021
 3. [MongoDB](#mongodb)
     - [Instalation of MongoDB](#instalation-of-mongodb)
     - [MongoDB datasource creation and populated DB](#mongodb-datasource-creation-and-populated-db)
-    - [Installation and use of MongoDB compass Client ](#installation-and-use-of-mongodb-compass-client)
+    - [Installation and use of MongoDB compass Client](#installation-and-use-of-mongodb-compass-client)
 4. [Loopback Development](#loopback-development)
     - [Loopback CLI](#loopback-cli)
     - [Design](#design)
@@ -26,6 +29,8 @@ Date created: 25 th October 2021
     - [Installation and dev](#installation-and-dev)
     - [Handling environments variables](#handling-environments-variables)
     - [Deploy in Kubernetes](#deploy-in-kubernetes)
+6. [Protection of the GraphQL endpoint with API Connect](#protection-of-the-graphql-endpoint-with-api-connect)
+7. [Additional resources](#additional-resources)
 
 ## Introduction
 
@@ -142,12 +147,12 @@ This is a sample with Continents
 
 The following steps will be followed and are well documented:
 
-* create app scaffolding
-* create datasource
-* create model
-* create repository
-* create relationships
-* create controller
+- create app scaffolding
+- create datasource
+- create model
+- create repository
+- create relationships
+- create controller
 
 ### Step by step development
 
@@ -233,15 +238,15 @@ See also [wikipedia article on associations](https://en.wikipedia.org/wiki/Entit
 It is important to understand what lb4 is supporting and what does it means.
 At this time lb4 supports:
 
-* belongsTo
-* hasMany
-* hasManyThrough
-* hasOne
+- belongsTo
+- hasMany
+- hasManyThrough
+- hasOne
 
 Other types of relationship are not supported:
 
-* has_one :through
-* has_and_belongs_to_many
+- has_one :through
+- has_and_belongs_to_many
 
 ##### Relations creation
 
@@ -332,6 +337,8 @@ filter={
 
 Officiel documentation is [here](https://loopback.io/doc/en/lb4/GraphQL.html).
 
+Under the cover we are going to use an application, openapi-to-graphql, to generate GraphQL schemas from Open API specifications, see source documentation [here](https://github.com/IBM/openapi-to-graphql)
+
 ### Concepts
 
 ![Testing so far](./images/lb-graphql-concepts.png)
@@ -404,7 +411,7 @@ mutation {
 
 ![Sample mutation](./images/sample-mutation.png)
 
-Introspection call to introspect the API (on Linux)
+Introspection call to the GraphLQ API (on Linux)
 
 ```curl
 curl 'http://localhost:3010/graphql?' -X POST -H 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/112.0' -H 'Accept: application/json' -H 'Accept-Language: en-US,en;q=0.5' -H 'Accept-Encoding: gzip, deflate, br' -H 'Referer: http://localhost:3010/' -H 'Content-Type: application/json' -H 'Origin: http://localhost:3010' -H 'DNT: 1' -H 'Connection: keep-alive' -H 'Sec-Fetch-Dest: empty' -H 'Sec-Fetch-Mode: cors' -H 'Sec-Fetch-Site: same-origin' --data-raw '{"query":"\nquery IntrospectionQuery {\n__schema {\n\nqueryType { name }\nmutationType { name }\nsubscriptionType { name }\ntypes {\n...FullType\n}\ndirectives {\nname\ndescription\n\nlocations\nargs {\n...InputValue\n}\n}\n}\n}\n\nfragment FullType on __Type {\nkind\nname\ndescription\nfields(includeDeprecated: true) {\nname\ndescription\nargs {\n...InputValue\n}\ntype {\n...TypeRef\n}\nisDeprecated\ndeprecationReason\n}\ninputFields {\n...InputValue\n}\ninterfaces {\n...TypeRef\n}\nenumValues(includeDeprecated: true) {\nname\ndescription\nisDeprecated\ndeprecationReason\n}\npossibleTypes {\n...TypeRef\n}\n}\n\nfragment InputValue on __InputValue {\nname\ndescription\ntype { ...TypeRef }\ndefaultValue\n}\n\nfragment TypeRef on __Type {\nkind\nname\nofType {\nkind\nname\nofType {\nkind\nname\nofType {\nkind\nname\nofType {\nkind\nname\nofType {\nkind\nname\nofType {\nkind\nname\nofType {\nkind\nname\n}\n}\n}\n}\n}\n}\n}\n}\n","operationName":"IntrospectionQuery"}' -o sdl.json
@@ -463,8 +470,14 @@ OPT echo Name of the Pod: $POD_NAME
 ?? kubectl proxy ??
 ```
 
+## Protection of the GraphQL endpoint with API Connect
+
+
+
+## Additional resources
+
 Below some useful resources:
 
-* [Performing a rolling update with OpenShift](https://kubernetes.io/docs/tutorials/kubernetes-basics/update/update-intro/)
-* [Web site containing interesting data and graphql playground](https://www.back4app.com/database/back4app/)
-* [Continents playground](list-of-all-continents-countries-cities/graphql-playground)
+- [Performing a rolling update with OpenShift](https://kubernetes.io/docs/tutorials/kubernetes-basics/update/update-intro/)
+- [Web site containing interesting data and graphql playground](https://www.back4app.com/database/back4app/)
+- [Continents playground](list-of-all-continents-countries-cities/graphql-playground)
