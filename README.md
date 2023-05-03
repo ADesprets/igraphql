@@ -29,12 +29,20 @@ Date created: 25 th October 2021
     - [Installation and dev](#installation-and-dev)
     - [Handling environments variables](#handling-environments-variables)
     - [Deploy in Kubernetes](#deploy-in-kubernetes)
-6. [Protection of the GraphQL endpoint with API Connect](#protection-of-the-graphql-endpoint-with-api-connect)
-7. [Additional resources](#additional-resources)
+6. [StepZen Development](#stepzen-development)
+    - [Stepzen CLI Install](#stepzen-cli-install)
+    - [Local development using Docker](#local-development-using-docker)
+7. [Protection of the GraphQL endpoint with API Connect](#protection-of-the-graphql-endpoint-with-api-connect)
+8. [Additional resources](#additional-resources)
 
 ## Introduction
 
 Official documentation: [Loopback V4 official documentation](https://loopback.io/doc/en/lb4/)
+Basically, loopback is:
+
+- An open source built on top of NodeJS
+- Is based on Model Driven Approach to accelerate development
+- While having a componentised approach enabling a lot of flexibility
 
 REST versus GraphQL: [You tube video](https://www.youtube.com/watch?v=PTfZcN20fro)
 
@@ -470,14 +478,60 @@ OPT echo Name of the Pod: $POD_NAME
 ?? kubectl proxy ??
 ```
 
+## StepZen Development
+
+### Stepzen CLI Install
+
+The CLI is used to build and deploy the GraphQL API
+
+Note: I'm using npm -version => 9.6.5 and node --version => v14.17.6
+
+```bash
+npm install -g stepzen
+```
+
+### Local development using Docker
+
+Start stepzen service in docker
+
+```bash
+stepzen service start
+```
+
+![Starting stepzen locally](./images/stepzen-start.png)
+
+It has started two containers and created a network
+
+```bash
+docker ps
+CONTAINER ID   IMAGE                                                         COMMAND                CREATED         PORTS                                                                        NAMES
+aaa15f97eac7   us-docker.pkg.dev/stepzen-public/images/stepzen:production    "/szbin/services"      3 minutes ago   8080/tcp, 8087-8088/tcp, 8443/tcp, 0.0.0.0:9000->9000/tcp, :::9000->9000/tcp stepzen-local
+f284fd0d254d   postgres:14                                                   "docker-entrypoint.s…" 4 minutes ago   5432/tcp                                                                     stepzen-metadata
+docker network ls
+NETWORK ID     NAME              DRIVER    SCOPE
+c4e560284572   stepzen-network   bridge    local
+```
+
+We can no login to stepzen
+
+```bash
+stepzen login --config ~/.stepzen/stepzen-config.local.yaml
+You have successfully logged in with the graphql account.
+```
+
 ## Protection of the GraphQL endpoint with API Connect
-
-
 
 ## Additional resources
 
-Below some useful resources:
+GraphQL resources:
+
+- [StepZen](https://stepzen.com/)
+- [Web site containing interesting data and graphql playground](https://www.back4app.com/database/back4app/)
+- [GraphQL.org](https://graphql.org/)
+- [GraphQL voyager](https://ivangoncharov.github.io/graphql-voyager/)
+- [Accessing MongoDB Using a GraphQL Interface](https://stepzen.com/blog/accessing-mongodb-using-a-graphql-interface)
+
+Other resources:
 
 - [Performing a rolling update with OpenShift](https://kubernetes.io/docs/tutorials/kubernetes-basics/update/update-intro/)
-- [Web site containing interesting data and graphql playground](https://www.back4app.com/database/back4app/)
-- [Continents playground](list-of-all-continents-countries-cities/graphql-playground)
+- [mongodb-local-data-api](https://github.com/saibotsivad/mongodb-local-data-api)
