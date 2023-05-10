@@ -154,7 +154,7 @@ Aggregation pipelines run with the db.collection.aggregate() method do not modif
 - Sort by continent
 - Specify only some fields (projection)
 
-```json
+```JSON
 [
   {
     $lookup:
