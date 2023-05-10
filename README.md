@@ -15,7 +15,7 @@ Date created: 25 th October 2021
     - [Data Modeling](#data-modeling)
     - [Environment](#environment)
 2. [MongoDB](#mongodb)
-    - [Instalation of MongoDB](#instalation-of-mongodb)
+    - [Installation of MongoDB](#installation-of-mongodb)
     - [MongoDB datasource creation and populated DB](#mongodb-datasource-creation-and-populated-db)
     - [Installation and use of MongoDB compass Client](#installation-and-use-of-mongodb-compass-client)
 3. [Loopback Development](#loopback-development)
@@ -63,7 +63,7 @@ All the applications are running locally. To facilitate the installation, I'm go
 
 In this article we use mongodb as the source of data. We spend a few chapters to explain how to use it. It should probably be a separated article, but we kept it here because it was the foundation of the sample used in this article.
 
-### Instalation of MongoDB
+### Installation of MongoDB
 
 #### Installation MongoDB docker runtime
 
@@ -85,6 +85,8 @@ To check the IP needed to access mongoDB, you issue the following command (mongo
 ```bash
 docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mongodb
 ```
+
+Hint: I'm using the IP, I had the choice of using the container name or also use network aliases with the option --network-alias used at startup of the container.
 
 In my case it returns 172.18.0.2
 
@@ -137,6 +139,8 @@ wget https://downloads.mongodb.com/compass/mongodb-compass_1.35.0_amd64.deb
 sudo dpkg -i mongodb-compass_1.35.0_amd64.deb
 mongodb-compass
 ```
+
+![Countries applications](./images/compass.png)
 
 #### Samples of commands
 
@@ -232,8 +236,6 @@ We start with a very simple model.
 This is a sample with Continents
 
 ![Models design: ](./images/models.png)
-
-![Countries applications](./images/compass.png)
 
 ### Overall development
 
@@ -521,7 +523,7 @@ Sample mutation
 
 ```json
 mutation {
-  continentControllerCreate(newContinentInput: {code: "AS", name: "Asia"}) {
+  continentControllerCreate(newContinentInput: {code: "OC", name: "Oceania"}) {
     code
     name
   }
@@ -648,7 +650,7 @@ You have successfully logged in with the graphql account.
 GraphQL resources:
 
 - [StepZen](https://stepzen.com/)
-- [Web site containing interesting data and graphql playground](https://www.back4app.com/database/back4app/)
+- [Web site containing interesting data and graphql playground](https://www.back4app.com/database/back4app/), I have tried this filter: `{continents (where: {code: {equalTo : "EU"}}){results { name countries (where: {code: {equalTo : "FR"}}){results{name cities {results {name}}}}}}}`
 - [GraphQL.org](https://graphql.org/)
 - [GraphQL voyager](https://ivangoncharov.github.io/graphql-voyager/)
 - [Accessing MongoDB Using a GraphQL Interface](https://stepzen.com/blog/accessing-mongodb-using-a-graphql-interface)
