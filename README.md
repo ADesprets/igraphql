@@ -12,28 +12,29 @@ Date last modified: 25 th April 2023
 Date created: 25 th October 2021
 
 1. [Introduction](#introduction)
-2. [Data Modeling](#data-modeling)
-3. [MongoDB](#mongodb)
+    - [Data Modeling](#data-modeling)
+    - [Environment](#environment)
+2. [MongoDB](#mongodb)
     - [Instalation of MongoDB](#instalation-of-mongodb)
     - [MongoDB datasource creation and populated DB](#mongodb-datasource-creation-and-populated-db)
     - [Installation and use of MongoDB compass Client](#installation-and-use-of-mongodb-compass-client)
-4. [Loopback Development](#loopback-development)
+3. [Loopback Development](#loopback-development)
     - [Loopback CLI](#loopback-cli)
     - [Design](#design)
     - [Overall development](#overall-development)
     - [Step by step development](#step-by-step-development)
     - [Building docker image and publish it to OpenShift](#building-docker-image-and-publish-it-to-openshift)
     - [Use of loopback](#use-of-loopback)
-5. [GraphQL development](#graphql-development)
+4. [GraphQL development](#graphql-development)
     - [Concepts](#concepts)
     - [Installation and dev](#installation-and-dev)
     - [Handling environments variables](#handling-environments-variables)
     - [Deploy in Kubernetes](#deploy-in-kubernetes)
-6. [StepZen Development](#stepzen-development)
+5. [StepZen Development](#stepzen-development)
     - [Stepzen CLI Install](#stepzen-cli-install)
     - [Local development using Docker](#local-development-using-docker)
-7. [Protection of the GraphQL endpoint with API Connect](#protection-of-the-graphql-endpoint-with-api-connect)
-8. [Additional resources](#additional-resources)
+6. [Protection of the GraphQL endpoint with API Connect](#protection-of-the-graphql-endpoint-with-api-connect)
+7. [Additional resources](#additional-resources)
 
 ## Introduction
 
@@ -46,19 +47,52 @@ Basically, loopback is:
 
 REST versus GraphQL: [You tube video](https://www.youtube.com/watch?v=PTfZcN20fro)
 
-## Data Modeling
+### Data Modeling
 
 How to design the model  [Wikipedia on associations](https://en.wikipedia.org/wiki/Entity%E2%80%93relationship_model)
 
 Types of associations [Article on associations](https://guides.rubyonrails.org/association_basics.html)
 
+### Environment
+
+All the applications are running locally. To facilitate the installation, I'm going to use docker as much as possible. I'm using a virtual machine on Ubuntu. In this VM docker is installed. I'm going to use two containers, one for mongoDB and one that I built for the loopback application which will also contains the graphql layer. In order to have the two containers communicating each other I create a docker network named *myappNetwork*.
+
+![Environment](./images/Environment.png)
+
 ## MongoDB
 
-In this article we use monodb as the source of data. We spend a few chapters to explain how to use it. It should probably be a separated article, but we kept it here because it was the foundation of the sample used in this article.
+In this article we use mongodb as the source of data. We spend a few chapters to explain how to use it. It should probably be a separated article, but we kept it here because it was the foundation of the sample used in this article.
 
 ### Instalation of MongoDB
 
+#### Installation MongoDB docker runtime
+
+I have created a docker network previously with the command.
+
+```bash
+docker network create myappNetwork
+```
+
+Getting the image of mongoDB and the run the container
+
+```bash
+docker pull mongo
+docker run --network=myappNetwork --name mongodb -d mongo 
+```
+
+To check the IP needed to access mongoDB, you issue the following command (mongodb is the name of the container)
+
+```bash
+docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mongodb
+```
+
+In my case it returns 172.18.0.2
+
+For reference, if you do not use a docker network : `docker run --name mongodb -d -p 27017:27017 mongo`. p means that you expose (publish) the port on the host.
+
 #### Installation MongoDB local
+
+For reference only because I'm not using a local installation but a container.
 
 ```bash
 wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | sudo apt-key add
@@ -77,14 +111,9 @@ sudo systemctl start mongod
 sudo systemctl status mongod
 ```
 
-#### Installation MongoDB docker runtime
-
-```bash
-docker pull mongo
-docker run --name mongodb -d -p 27017:27017 mongo
-```
-
 ### MongoDB datasource creation and populated DB
+
+For reference, I'm going to use loopback to populate the database.
 
 ```bash
 db.createUser({user: "nono", pwd: "Passw0rd!", roles:[{db:"test"}]})
@@ -101,39 +130,94 @@ mongoimport --db myDb --collection myCollection --type csv --headerline --file /
 
 ### Installation and use of MongoDB compass Client
 
+MongoDB Compass is a graphical user interface (GUI) to make it easier for developers and database administrators to interact with MongoDB databases. Key features of MongoDB Compass includes Data Exploration, Query Building, Index Management, Aggregation Pipeline Builder, Data Validation, Geospatial Data Visualization, and Schema Analysis.
+
 ```bash
 wget https://downloads.mongodb.com/compass/mongodb-compass_1.35.0_amd64.deb
 sudo dpkg -i mongodb-compass_1.35.0_amd64.deb
 mongodb-compass
 ```
 
+#### Samples of commands
+
+##### Aggregation
+
+MongoDB Aggregation is used to process and analyze data within MongoDB collections. It allows you to perform complex data transformations, aggregations, and computations on large datasets, similar to SQL's GROUP BY and aggregate functions. It consists of a sequence of stages, where each stage performs a specific operation on the input documents and passes the result to the next stage.
+
+Aggregation pipelines run with the db.collection.aggregate() method do not modify documents in a collection, unless the pipeline contains a $merge or $out stage. In the following aggregation, I have created 3 stages:
+
+- Perform the let outer join
+- Sort by continent
+- Specify only some fields (projection)
+
+```json
+[
+  {
+    $lookup:
+      /**
+       * from: The target collection.
+       * localField: The local join field.
+       * foreignField: The target join field.
+       * as: The name for the results.
+       * pipeline: Optional pipeline to run on the foreign collection.
+       * let: Optional variables to use in the pipeline field stages.
+       */
+      {
+        from: "Country",
+        localField: "_id",
+        foreignField: "continentId",
+        as: "countries",
+      },
+  },
+  {
+    $sort:
+      /**
+       * Provide any number of field/order pairs.
+       */
+      {
+        _id: 1,
+      },
+  },
+  {
+    $project:
+      /**
+       * specifications: The fields to
+       *   include or exclude.
+       */
+      {
+        _id: 0,
+        continent: "$name",
+        "countries.name": 1,
+      },
+  },
+]
+```
+
 ## Loopback Development
 
 ### Loopback CLI
+
+To instantiate the CLI globally
+
+```bash
+npm i -g @loopback/cli
+```
 
 Below a quick overview of the arguments of the lb4 CLI matching with the various concepts in loopback.
 
 |        Option        | Description                                                                                                                                                                   |
 |:--------------------:|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | app                  | Central class for setting up all module's components, controllers, servers and bindings                                                                                       |
-| datasource           | Create the source of data, where store/fetch data from. (in-memory, file, MongoDB, and many other databases). Connectors: [here](https://loopback.io/doc/en/lb4/Database-connectors.html)                                                                                            |
+| datasource           | Create the source of data, where store/fetch data from. (in-memory, file, MongoDB, and many other databases). Connectors: [here](https://loopback.io/doc/en/lb4/Database-connectors.html) |
 | model                | Create entity in a Model. Use to model the formats of the data                                                                                                                |
 | repository           | Create the abstraction layer between your model and your controller. Model defines the format of the data, the repository add the type of behavior you can do with the model. |
 | relation             | Create relation between the entities in the Model                                                                                                                             |
 | controller           | Where you put your API endpoint logic and handle requests/responses to your API.                                                                                              |
-| extension            |                                                                                                                                                                               |
-| service              |                                                                                                                                                                               |
-| openapi              |                                                                                                                                                                               |
-| interceptor          |                                                                                                                                                                               |
-| observer             |                                                                                                                                                                               |
-| discover             |                                                                                                                                                                               |
-| update               |                                                                                                                                                                               |
-| rest-crud            |                                                                                                                                                                               |
-| copyright            |                                                                                                                                                                               |
-| import-lb3-models    |                                                                                                                                                                               |
-| example              | Create a full sample                                                                                                                                                          |
-| install-completion   |                                                                                                                                                                               |
-| uninstall-completion |                                                                                                                                                                               |
+| interceptor          | Interceptors are reusable functions to provide extra logic around method invocations (validate/log/catch errors/...)                                                          |
+| extension            | A common functionality that the framework depends on and interacts with, such as, booting the application, parsing http request bodies, and handling life cycle events. [Documentation](https://loopback.io/doc/en/lb4/Extension-point-and-extensions.html) |
+| observer             | A LoopBack application has its own life cycles at runtime. [Documentation](https://loopback.io/doc/en/lb4/Life-cycle.html)                                                                   |
+| discover             | Handles adding artifacts to the application [Documentation](https://loopback.io/doc/en/lb4/core-tutorial-part9.html)                                                                         |
+| example              | Create a full sample                                                                                                                                                         |
 
 lb4 --help
 
@@ -164,7 +248,7 @@ The following steps will be followed and are well documented:
 
 ### Step by step development
 
-#### Application scafolding creation
+#### Application scaffolding creation
 
 `lb4 app`
 ![Countries applications](./images/countries1.png)
@@ -311,7 +395,7 @@ Reference: [loopback on docker](https://medium.com/loopback/loopback-quick-tip-r
 Dockerfile provided by Loopback
 
 ```bash
-sudo docker build -t myapp .
+docker build -t country.img .
 ```
 
 ### Use of loopback
@@ -341,9 +425,36 @@ filter={
 }
 ```
 
+#### Left outer join
+
+Use the include filter to specify the related models that you want to join. Here's an example of how you can perform a left outer join using the include filter in LoopBack:
+
+```javascript
+const result = await ModelA.find({
+  include: {
+    relation: 'modelB',
+    scope: {
+      where: { someColumn: { gt: 10 } },
+      include: {
+        relation: 'modelC',
+        scope: {
+          where: { someOtherColumn: 'someValue' }
+        }
+      }
+    }
+  }
+});
+```
+
+In this example, we're performing a left outer join between ModelA and ModelB, where ModelB is related to ModelA via a foreign key. We're also including ModelC in the join, which is related to ModelB via a foreign key.
+
+The include filter takes an object that defines the relation and the scope of the join. In our example, we're defining the relation as modelB and specifying a scope for the join. The scope includes a where filter that specifies the conditions for the join, as well as another include filter that specifies the join between ModelB and ModelC.
+
+By using the include filter in this way, we can perform complex left outer joins between multiple models in LoopBack.
+
 ## GraphQL development
 
-Officiel documentation is [here](https://loopback.io/doc/en/lb4/GraphQL.html).
+Official documentation is [here](https://loopback.io/doc/en/lb4/GraphQL.html).
 
 Under the cover we are going to use an application, openapi-to-graphql, to generate GraphQL schemas from Open API specifications, see source documentation [here](https://github.com/IBM/openapi-to-graphql)
 
@@ -425,7 +536,7 @@ Introspection call to the GraphLQ API (on Linux)
 curl 'http://localhost:3010/graphql?' -X POST -H 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/112.0' -H 'Accept: application/json' -H 'Accept-Language: en-US,en;q=0.5' -H 'Accept-Encoding: gzip, deflate, br' -H 'Referer: http://localhost:3010/' -H 'Content-Type: application/json' -H 'Origin: http://localhost:3010' -H 'DNT: 1' -H 'Connection: keep-alive' -H 'Sec-Fetch-Dest: empty' -H 'Sec-Fetch-Mode: cors' -H 'Sec-Fetch-Site: same-origin' --data-raw '{"query":"\nquery IntrospectionQuery {\n__schema {\n\nqueryType { name }\nmutationType { name }\nsubscriptionType { name }\ntypes {\n...FullType\n}\ndirectives {\nname\ndescription\n\nlocations\nargs {\n...InputValue\n}\n}\n}\n}\n\nfragment FullType on __Type {\nkind\nname\ndescription\nfields(includeDeprecated: true) {\nname\ndescription\nargs {\n...InputValue\n}\ntype {\n...TypeRef\n}\nisDeprecated\ndeprecationReason\n}\ninputFields {\n...InputValue\n}\ninterfaces {\n...TypeRef\n}\nenumValues(includeDeprecated: true) {\nname\ndescription\nisDeprecated\ndeprecationReason\n}\npossibleTypes {\n...TypeRef\n}\n}\n\nfragment InputValue on __InputValue {\nname\ndescription\ntype { ...TypeRef }\ndefaultValue\n}\n\nfragment TypeRef on __Type {\nkind\nname\nofType {\nkind\nname\nofType {\nkind\nname\nofType {\nkind\nname\nofType {\nkind\nname\nofType {\nkind\nname\nofType {\nkind\nname\nofType {\nkind\nname\n}\n}\n}\n}\n}\n}\n}\n}\n","operationName":"IntrospectionQuery"}' -o sdl.json
 ```
 
-You can then use the GraphQL Voyager to visualise the API using the introspection tab.
+You can then use the GraphQL Voyager to visualize the API using the introspection tab.
 ![Sample mutation](./images/continents-introspection.png)
 
 ### Handling environments variables
@@ -436,9 +547,19 @@ You can then use the GraphQL Voyager to visualise the API using the introspectio
 
 Instruction to deploy in Kubernetes [here](https://loopback.io/doc/en/lb4/deploying_to_ibm_cloud_kubernetes.html)
 
+First we build the image, let's call the image name countries-app
+
 ```bash
 docker build -t countries-app .
+```
 
+You can test it locally first
+
+```bash
+docker run -it -p 3000:3000 countries-app
+```
+
+```bash
 ibmcloud login –sso
 ibmcloud cr login
 
@@ -512,12 +633,13 @@ NETWORK ID     NAME              DRIVER    SCOPE
 c4e560284572   stepzen-network   bridge    local
 ```
 
-We can no login to stepzen
+We can now login to stepzen
 
 ```bash
 stepzen login --config ~/.stepzen/stepzen-config.local.yaml
-You have successfully logged in with the graphql account.
 ```
+
+You have successfully logged in with the graphql account.
 
 ## Protection of the GraphQL endpoint with API Connect
 
