@@ -80,6 +80,13 @@ docker pull mongo
 docker run --network=myappNetwork --name mongodb -d mongo 
 ```
 
+Hint: to stop/restart the containers:
+
+```bash
+ docker ps -a | grep -e mongodb -e country
+ docker start <mongodb container id> <country.img container id>
+```
+
 To check the IP needed to access mongoDB, you issue the following command (mongodb is the name of the container)
 
 ```bash
@@ -404,6 +411,113 @@ docker build -t country.img .
 
 #### Query
 
+In this chapter we study the use of the filter
+
+Loopback provides a high level of control in the queries.
+A filter is defined by default as such:
+
+```json
+{
+  "offset": 0,
+  "limit": 100,
+  "skip": 0,
+  "order": "string",
+  "where": {
+    "additionalProp1": {}
+  },
+  "fields": {
+    "code": true,
+    "name": true,
+    "continentId": true
+  },
+  "include": [
+    {
+      "relation": "continent",
+      "scope": {
+        "offset": 0,
+        "limit": 100,
+        "skip": 0,
+        "order": "string",
+        "where": {
+          "additionalProp1": {}
+        },
+        "fields": {},
+        "include": [
+          {
+            "additionalProp1": {}
+          }
+        ]
+      }
+    },
+    "string"
+  ]
+}
+```
+
+Explanations   on the various part of the filter
+
+| filter | Explanation | Sample |
+|:---:| :---| :---|
+| offset | Set offset | 100 |
+| limit | Set limit | 5 |
+| skip | Alias to offset | 5 |
+| order | Describe the sorting order | "name ASC" |
+| where | Where clause ({property: value} or {property: {op: value}}
+) | t |
+| fields | Describe what fields to be included/excluded | "name": true |
+| include | Declare include | t |
+
+Some samples:
+
+Sample below retrieves 5 countries stating at the 100 position with an ascending sorting on the name and only return the name of the country
+
+```json
+{
+  "offset": 100,
+  "limit": 5,
+  "order": "name ASC",
+  "fields": {
+    "name": true
+  }
+}
+```
+
+Sample with where clause
+
+Without an operator (simple)
+
+```json
+{property: value}
+```
+With an operator
+
+```json
+{property: {op: value}}
+```
+
+Where op is the operator, possibles values are : = / and / or / gt, gte / lt, lte / between / inq, nin /near / neq / like, nlike / ilike, nilike / regexp.
+
+#### Left outer join
+
+Use the include filter to specify the related models that you want to join. Here's an example of how you can perform a left outer join using the include filter in LoopBack:
+
+```javascript
+const result = await ModelA.find({
+  include: {
+    relation: 'modelB',
+    scope: {
+      where: { someColumn: { gt: 10 } },
+      include: {
+        relation: 'modelC',
+        scope: {
+          where: { someOtherColumn: 'someValue' }
+        }
+      }
+    }
+  }
+});
+```
+
 #### find filter
 
 ```json
@@ -425,27 +539,6 @@ filter={
     "tag": true
   }
 }
-```
-
-#### Left outer join
-
-Use the include filter to specify the related models that you want to join. Here's an example of how you can perform a left outer join using the include filter in LoopBack:
-
-```javascript
-const result = await ModelA.find({
-  include: {
-    relation: 'modelB',
-    scope: {
-      where: { someColumn: { gt: 10 } },
-      include: {
-        relation: 'modelC',
-        scope: {
-          where: { someOtherColumn: 'someValue' }
-        }
-      }
-    }
-  }
-});
 ```
 
 In this example, we're performing a left outer join between ModelA and ModelB, where ModelB is related to ModelA via a foreign key. We're also including ModelC in the join, which is related to ModelB via a foreign key.
