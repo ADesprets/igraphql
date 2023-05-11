@@ -462,10 +462,9 @@ Explanations   on the various part of the filter
 | limit | Set limit | 5 |
 | skip | Alias to offset | 5 |
 | order | Describe the sorting order | "name ASC" |
-| where | Where clause ({property: value} or {property: {op: value}}
-) | t |
+| where | Where clause ({property: value} or {property: {op: value}}) | "where": {"name": "France"} |
 | fields | Describe what fields to be included/excluded | "name": true |
-| include | Declare include | t |
+| include | Declare include | - |
 
 Some samples:
 
