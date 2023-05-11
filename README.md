@@ -157,7 +157,7 @@ MongoDB Aggregation is used to process and analyze data within MongoDB collectio
 
 Aggregation pipelines run with the db.collection.aggregate() method do not modify documents in a collection, unless the pipeline contains a $merge or $out stage. In the following aggregation, I have created 3 stages:
 
-- Perform the let outer join
+- Perform the left outer join
 - Sort by continent
 - Specify only some fields (projection)
 
@@ -469,7 +469,7 @@ Explanations   on the various part of the filter
 
 Some samples:
 
-Sample below retrieves 5 countries stating at the 100 position with an ascending sorting on the name and only return the name of the country
+Sample below retrieves 5 countries starting at the 100 position with an ascending sorting on the name and only return the name of the country
 
 ```json
 {
@@ -489,13 +489,40 @@ Without an operator (simple)
 ```json
 {property: value}
 ```
+
 With an operator
 
 ```json
 {property: {op: value}}
 ```
 
-Where op is the operator, possibles values are : = / and / or / gt, gte / lt, lte / between / inq, nin /near / neq / like, nlike / ilike, nilike / regexp.
+Where op is the operator, possibles values are : = / and / or / gt, gte / lt, lte / between / inq, nin /near / neq / like, nlike / ilike, nilike / regexp. Documentation is [here](https://loopback.io/doc/en/lb4/Where-filter#operators)
+
+Simple sample
+
+```json
+{
+"where": {"name": "France"}
+}
+```
+
+With an operator (like) sample
+
+Sample to retrieve all the countries containing the letter F in te name
+
+```json
+{
+ "where": {"name": {"like": "F"}}
+}
+```
+
+Sample to retrieve all the countries starting with the letter F with a regex. Notice the caret to make sure this is the first letter.
+
+```json
+{
+ "where": {"name": {"regexp": "^F.*"}}
+}
+```
 
 #### Left outer join
 
