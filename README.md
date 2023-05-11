@@ -454,7 +454,7 @@ A filter is defined by default as such:
 }
 ```
 
-Explanations   on the various part of the filter
+Explanations on the various part of the filter
 
 | filter | Explanation | Sample |
 |:---:| :---| :---|
