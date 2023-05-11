@@ -7,7 +7,7 @@ So far, the topics explored are about the use of mongoDB with a loopback layer a
 
 Author: Arnauld Desprets (arnauld_desprets@fr.ibm.com)
 
-Date last modified: 25 th April 2023
+Date last modified: 11 th May 2023
 
 Date created: 25 th October 2021
 
@@ -55,7 +55,7 @@ Types of associations [Article on associations](https://guides.rubyonrails.org/a
 
 ### Environment
 
-All the applications are running locally. To facilitate the installation, I'm going to use docker as much as possible. I'm using a virtual machine on Ubuntu. In this VM docker is installed. I'm going to use two containers, one for mongoDB and one that I built for the loopback application which will also contains the graphql layer. In order to have the two containers communicating each other I create a docker network named *myappNetwork*.
+All the applications are running locally. To facilitate the installation, I'm going to use docker as much as possible. I'm using a virtual machine on Ubuntu. In this VM docker is installed. I'm going to use two containers, one for mongoDB and one that I built for the loopback application which will also contains the graphQL layer. In order to have the two containers communicating each other I create a docker network named *myappNetwork*.
 
 ![Environment](./images/Environment.png)
 
@@ -208,7 +208,7 @@ Aggregation pipelines run with the db.collection.aggregate() method do not modif
 
 ### Loopback CLI
 
-To instantiate the CLI globally
+To install the CLI globally
 
 ```bash
 npm i -g @loopback/cli
@@ -376,6 +376,24 @@ Main file generated
 
 #### Test the applications
 
+First we build the image, let's call the image name countries-app. The Dockerfile is provided by Loopback.
+
+```bash
+docker build -t country.img .
+```
+
+We test with the two docker containers.
+
+```bash
+docker run --network=myappNetwork --name countries country.img
+```
+
+For reference (not used)
+
+```bash
+docker run -it -p 3000:3000 countries-app
+```
+
 (Ensure access to db): db.createUser( {user: "nono", pwd: "Passw0rd", roles:[ { role: "readWrite" , db:"countriesDS"} ] })
 
 #### Create data
@@ -395,17 +413,13 @@ curl -X POST "http://localhost:3000/countries" -H  "accept: application/json" -H
 curl -X POST "http://localhost:3000/countries" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"code\":\"GB\",\"name\":\"United Kingdom\",\"currency\":\"GBP\",\"capital\":\"London\",\"continentId\":\"EU\"}"
 ```
 
+You can also find the commands for the creation of all the countries and continents [here](./materials\add-countries-REST.txt)
+
 ![Testing so far](./images/test-countries.png)
 
 ### Building docker image and publish it to OpenShift
 
 Reference: [loopback on docker](https://medium.com/loopback/loopback-quick-tip-running-lb4-application-in-docker-c029e3a71000)
-
-Dockerfile provided by Loopback
-
-```bash
-docker build -t country.img .
-```
 
 ### Use of loopback
 
@@ -544,29 +558,6 @@ const result = await ModelA.find({
 });
 ```
 
-#### find filter
-
-```json
-filter={
-  "offset": 0,
-  "limit": 100,
-  "skip": 0,
-  "order": "string",
-  "where": {
-    "additionalProp1": {}
-  },
-  "fields": {
-    "id": true,
-    "title": true,
-    "desc": true,
-    "isComplete": true,
-    "remindAtAddress": true,
-    "remindAtGeo": true,
-    "tag": true
-  }
-}
-```
-
 In this example, we're performing a left outer join between ModelA and ModelB, where ModelB is related to ModelA via a foreign key. We're also including ModelC in the join, which is related to ModelB via a foreign key.
 
 The include filter takes an object that defines the relation and the scope of the join. In our example, we're defining the relation as modelB and specifying a scope for the join. The scope includes a where filter that specifies the conditions for the join, as well as another include filter that specifies the join between ModelB and ModelC.
@@ -668,18 +659,6 @@ You can then use the GraphQL Voyager to visualize the API using the introspectio
 
 Instruction to deploy in Kubernetes [here](https://loopback.io/doc/en/lb4/deploying_to_ibm_cloud_kubernetes.html)
 
-First we build the image, let's call the image name countries-app
-
-```bash
-docker build -t countries-app .
-```
-
-You can test it locally first
-
-```bash
-docker run -it -p 3000:3000 countries-app
-```
-
 ```bash
 ibmcloud login –sso
 ibmcloud cr login
@@ -760,7 +739,7 @@ We can now login to stepzen
 stepzen login --config ~/.stepzen/stepzen-config.local.yaml
 ```
 
-You have successfully logged in with the graphql account.
+You have successfully logged in with the graphQL account.
 
 ## Protection of the GraphQL endpoint with API Connect
 
@@ -769,7 +748,7 @@ You have successfully logged in with the graphql account.
 GraphQL resources:
 
 - [StepZen](https://stepzen.com/)
-- [Web site containing interesting data and graphql playground](https://www.back4app.com/database/back4app/), I have tried this filter: `{continents (where: {code: {equalTo : "EU"}}){results { name countries (where: {code: {equalTo : "FR"}}){results{name cities {results {name}}}}}}}`
+- [Web site containing interesting data and graphQL playground](https://www.back4app.com/database/back4app/), I have tried this filter: `{continents (where: {code: {equalTo : "EU"}}){results { name countries (where: {code: {equalTo : "FR"}}){results{name cities {results {name}}}}}}}`
 - [GraphQL.org](https://graphql.org/)
 - [GraphQL voyager](https://ivangoncharov.github.io/graphql-voyager/)
 - [Accessing MongoDB Using a GraphQL Interface](https://stepzen.com/blog/accessing-mongodb-using-a-graphql-interface)
