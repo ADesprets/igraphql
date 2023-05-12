@@ -151,9 +151,15 @@ sudo dpkg -i mongodb-compass_1.35.0_amd64.deb
 mongodb-compass
 ```
 
-![Countries applications](./images/compass.png)
+![Mongo compass connect](./images/compass-connect.png)
 
 #### Samples of commands
+
+##### Query
+
+Here is a simple query, find the continents, ordered by name, with an offset (skip) 2 and only return 2. Just display the name and note the _id. Only Asia and Europe are returned.
+
+![Mongo compass connect](./images/compass-query.png)
 
 ##### Aggregation
 
@@ -207,6 +213,8 @@ Aggregation pipelines run with the db.collection.aggregate() method do not modif
   },
 ]
 ```
+
+![Mongo compass aggregation](./images/compass-aggregation.png)
 
 ## Loopback Development
 
@@ -482,7 +490,7 @@ Explanations on the various part of the filter
 | order | Describe the sorting order | "name ASC" |
 | where | Where clause ({property: value} or {property: {op: value}}) | "where": {"name": "France"} |
 | fields | Describe what fields to be included/excluded | "name": true |
-| include | Declare include | "relation": "countries" |
+| include | To join several models | "relation": "countries" |
 
 Some samples:
 
@@ -499,7 +507,7 @@ Sample below retrieves 5 countries starting at the 100 position with an ascendin
 }
 ```
 
-Sample with where clause
+Sample where clauses
 
 Without an operator (simple)
 
