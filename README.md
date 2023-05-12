@@ -38,14 +38,18 @@ Date created: 25 th October 2021
 
 ## Introduction
 
-Official documentation: [Loopback V4 official documentation](https://loopback.io/doc/en/lb4/)
-Basically, loopback is:
+Official loopback documentation: [Loopback V4 official documentation](https://loopback.io/doc/en/lb4/)
+
+loopback is:
 
 - An open source built on top of NodeJS
 - Is based on Model Driven Approach to accelerate development
 - While having a componentised approach enabling a lot of flexibility
 
 REST versus GraphQL: [You tube video](https://www.youtube.com/watch?v=PTfZcN20fro)
+
+Official StepZen documentation: [StepZen](https://stepzen.com/)
+StepZen is a platform that helps creating a unified GraphQL API by combining data from multiple sources, such as databases, RESTful services, and more. With StepZen, you can define your API schema using GraphQL SDL (Schema Definition Language) and map it to the underlying data sources (SQL and NoSQL databases, RESTful APIs, GraphQL services, or custom data sources). It offers features like automatic caching, pagination, and authentication.
 
 ### Data Modeling
 
@@ -413,7 +417,7 @@ curl -X POST "http://localhost:3000/countries" -H  "accept: application/json" -H
 curl -X POST "http://localhost:3000/countries" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"code\":\"GB\",\"name\":\"United Kingdom\",\"currency\":\"GBP\",\"capital\":\"London\",\"continentId\":\"EU\"}"
 ```
 
-You can also find the commands for the creation of all the countries and continents [here](./materials\add-countries-REST.txt)
+You can also find the commands for the creation of all the countries and continents [here](./materials/add-countries-REST.txt)
 
 ![Testing so far](./images/test-countries.png)
 
@@ -435,7 +439,7 @@ A filter is defined by default as such:
   "offset": 0,
   "limit": 100,
   "skip": 0,
-  "order": "string",
+  "order": "name ASC",
   "where": {
     "additionalProp1": {}
   },
@@ -446,7 +450,7 @@ A filter is defined by default as such:
   },
   "include": [
     {
-      "relation": "continent",
+      "relation": "countries",
       "scope": {
         "offset": 0,
         "limit": 100,
@@ -463,7 +467,7 @@ A filter is defined by default as such:
         ]
       }
     },
-    "string"
+    "name"
   ]
 }
 ```
@@ -478,7 +482,7 @@ Explanations on the various part of the filter
 | order | Describe the sorting order | "name ASC" |
 | where | Where clause ({property: value} or {property: {op: value}}) | "where": {"name": "France"} |
 | fields | Describe what fields to be included/excluded | "name": true |
-| include | Declare include | - |
+| include | Declare include | "relation": "countries" |
 
 Some samples:
 
@@ -541,28 +545,39 @@ Sample to retrieve all the countries starting with the letter F with a regex. No
 
 Use the include filter to specify the related models that you want to join. Here's an example of how you can perform a left outer join using the include filter in LoopBack:
 
-```javascript
-const result = await ModelA.find({
-  include: {
-    relation: 'modelB',
-    scope: {
-      where: { someColumn: { gt: 10 } },
-      include: {
-        relation: 'modelC',
-        scope: {
-          where: { someOtherColumn: 'someValue' }
-        }
-      }
-    }
+```json
+{
+ "include": [
+  {
+   "relation": "countries"
   }
-});
+ ]
+}
 ```
 
-In this example, we're performing a left outer join between ModelA and ModelB, where ModelB is related to ModelA via a foreign key. We're also including ModelC in the join, which is related to ModelB via a foreign key.
+In this example, we're performing a left outer join between Continent and Country. This sample will return all the countries associated with each continents.
 
-The include filter takes an object that defines the relation and the scope of the join. In our example, we're defining the relation as modelB and specifying a scope for the join. The scope includes a where filter that specifies the conditions for the join, as well as another include filter that specifies the join between ModelB and ModelC.
+A more complex sample:
 
-By using the include filter in this way, we can perform complex left outer joins between multiple models in LoopBack.
+```json
+{
+  "offset": 0,
+  "limit": 5,
+  "order": "name ASC",
+  "fields": {"code":true, "name":true},
+  "include": [
+    {
+      "relation": "countries",
+      "scope": {
+        "offset": 0,
+        "limit": 5,
+        "fields": {"code":false, "name":true, "continentId":true},
+        "order": "name ASC"
+      }
+    }
+  ]
+}
+```
 
 ## GraphQL development
 
