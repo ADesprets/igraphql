@@ -512,13 +512,13 @@ Sample where clauses
 Without an operator (simple)
 
 ```json
-{property: value}
+{"property": "value"}
 ```
 
 With an operator
 
 ```json
-{property: {op: value}}
+{"property": {"op": "value"}}
 ```
 
 Where op is the operator, possibles values are : = / and / or / gt, gte / lt, lte / between / inq, nin /near / neq / like, nlike / ilike, nilike / regexp. Documentation is [here](https://loopback.io/doc/en/lb4/Where-filter#operators)
